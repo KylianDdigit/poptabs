@@ -1,0 +1,40 @@
+﻿@page "/test"
+@inject IJSRuntime runtime
+
+
+<p>Received message is : @Message</p>
+
+@code {
+  public string? Message = null;
+
+  private void UpdateMessage()
+  {
+    Message = "Kijk dit werkt!";
+    StateHasChanged();
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      await runtime.InvokeVoidAsync("updateMessageCaller",
+        DotNetObjectReference.Create(new JsMessageHelper(UpdateMessage)));
+    }
+  }
+
+  public class JsMessageHelper
+  {
+    public JsMessageHelper(Action action)
+    {
+      this.action = action;
+    }
+
+    [JSInvokable("BlazorSample")]
+    public void InvokeAction()
+    {
+      action.Invoke();
+    }
+
+    private Action action;
+  }
+}

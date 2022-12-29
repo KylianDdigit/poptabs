@@ -1,0 +1,59 @@
+﻿@page "/"
+@inject IJSRuntime runtime
+
+
+<p>@Message</p>
+<button class="btn btn-primary" @onclick="BindBroadCast">BindBroadCast...</button>
+<button class="btn btn-primary" @onclick="SendMessage">UpdateMessage</button>
+<a href="/test" target="_blank">Pop-out!</a>
+<p>Last button clicked: @LastButtonClicked</p>
+
+@code {
+  private string? LastButtonClicked { get; set; }
+
+  private async Task BindBroadCast()
+  {
+    if (messageHelper is not null)
+    {
+      await runtime.InvokeVoidAsync("updateMessageCaller",
+        DotNetObjectReference.Create(messageHelper));
+    }
+  }
+
+  private async Task SendMessage()
+  {
+    await runtime.InvokeVoidAsync("SendStateOfLastButtonClicked");
+  }
+
+  public string? Message = null;
+
+  private void UpdateMessage()
+  {
+    Message = "Kijk dit werkt!";
+    StateHasChanged();
+  }
+
+
+  protected override void OnInitialized()
+  {
+    messageHelper = new(UpdateMessage);
+  }
+
+  public JsMessageHelper? messageHelper;
+
+  public class JsMessageHelper
+  {
+    public JsMessageHelper(Action action)
+    {
+      this.action = action;
+    }
+
+    [JSInvokable("BlazorSample")]
+    public void InvokeAction()
+    {
+      action.Invoke();
+    }
+
+    private Action action;
+  }
+}
